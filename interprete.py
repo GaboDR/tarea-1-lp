@@ -6,6 +6,8 @@ mayusculas = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
 minusculas = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 
               'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 numeros = [0,1,2,3,4,5,6,7,8,9]
+bloque_if = False
+bloque_else = False
 
 def Error(tipo, linea):
     print(tipo)
@@ -34,20 +36,30 @@ def funcion_dp(linea):
     error = "sintaxsis desconocida"
     if linea[1] in variables:
         if linea[2] == "ASIG":
-            variables[linea[1]]= linea[3]
+            if re.match(r'^\#', linea[3]) :
+                linea[3] = re.sub(r'^\#',"",linea[3])
+                variables[linea[1]]= linea[3]
+            elif linea[3] == "True":
+                variables[linea[1]]= True
+            elif linea[3] == "False":
+                variables[linea[1]]= False
+
+            else:
+                variables[linea[1]] = int(linea[3])
+
             return [True, None]
         if any(linea[i] in [True, False] or variables.get(linea[i]) in [True, False] for i in [3, 4]):
             error = "no operable"
         else:    
             par1 = linea[3]
             par2 = linea[4]
+            
             if par1 in variables:
                 par1 = variables[par1]
             if par2 in variables:
                 par2 = variables[par2]
-
             if linea[2] in ["+", "=="]:
-                if re.search(r'[a-zA-z]', par1) or re.search(r'[a-zA-z]', par2):
+                if isinstance(par1, str) or isinstance(par2, str):
                     par1= str(par1)
                     par2= str(par2)
                 
@@ -67,7 +79,7 @@ def funcion_dp(linea):
             
             elif linea[2] in ["*", ">"]:
 
-                if re.search(r'[a-zA-z]', par1) or re.search(r'[a-zA-z]', par2):
+                if isinstance(par1, str) or isinstance(par2, str):
                     error = "no valido"
 
                 else:
@@ -99,6 +111,17 @@ def funcion_mostrar(variable):
         return [True, None]
     return [False, "no existe"]
 
+def verificar_if(cond):
+    if cond in variables:
+        resultado = variables[cond]
+        if isinstance(resultado, bool):
+            return [True, resultado]
+        else:
+            error = "tipo incorrecto"
+    else:
+        error = "variable no definida"
+    return [False, error]
+
 
 archivo = open("codigo.txt", "r")
 numero_linea = 0
@@ -109,25 +132,20 @@ for linea in archivo:
     linea_str= re.split(r'#',linea)
     linea_funcion=re.split(r'\s+',linea_str[0])
 
-
-
-
     if len(linea_str) > 2:
-        string1= linea_str[1]
-        string2= linea_str[2]
+        string1= "#"+linea_str[1]
+        string2= "#"+linea_str[2]
 
         linea_funcion.append(string1)
         linea_funcion.append(string2)
     elif len(linea_str) > 1:
-        string1= linea_str[1]
+        string1= "#"+linea_str[1]
         linea_funcion.append(string1)  
     
-    
-    
     linea_funcion = list(filter(None, linea_funcion))
+
+    #espacio para poner continue
  
-
-
     if "DEFINE" == linea_funcion[0]:
 
         estado, detalle = definicion(linea_funcion)
@@ -136,7 +154,28 @@ for linea in archivo:
     elif "MOSTRAR" in linea_funcion[0]:
         parametros = re.split(r'\(',linea_funcion[0])
         estado, detalle = funcion_mostrar(parametros[1][:-1])
-    
+
+    elif "if" == linea_funcion[0]:
+        condicion = re.sub(r'\(|\)',"",linea_funcion[1])
+        estado , detalle = verificar_if(condicion)
+
+        if estado == True and detalle == True:
+            bloque_if =True
+            #hacer el if
+        else:
+            bloque_else=True
+            #hacer el else
+
+    elif "}" == linea_funcion[0] and len(linea_funcion) >1:
+        #finaliza un bloque if y empieza else
+        if bloque_if:
+            bloque_if = False
+
+    elif "}" == linea_funcion[0] and len(linea_funcion) ==1:
+        #finaliza un bloque else
+        bloque_else=False
+
+
     if estado == False:
         Error(detalle, numero_linea)
         break
