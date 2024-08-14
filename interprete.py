@@ -6,14 +6,14 @@ mayusculas = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
 minusculas = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 
               'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 numeros = [0,1,2,3,4,5,6,7,8,9]
+#para restringir iterados hay que implementar una pila
 bloque_if = False
 bloque_else = False
+continuacion = False
 
 def Error(tipo, linea):
     print(tipo)
     print(linea)
-
-
 
 def definicion(linea):
     valido = r'^\$_'
@@ -126,6 +126,7 @@ def verificar_if(cond):
 archivo = open("codigo.txt", "r")
 numero_linea = 0
 for linea in archivo:
+    #print(bloque_if, bloque_else, continuacion)
     numero_linea +=1 
     linea=linea.strip()
     
@@ -144,37 +145,48 @@ for linea in archivo:
     
     linea_funcion = list(filter(None, linea_funcion))
 
-    #espacio para poner continue
- 
-    if "DEFINE" == linea_funcion[0]:
+    #print(linea_funcion)
 
-        estado, detalle = definicion(linea_funcion)
-    elif "DP" == linea_funcion[0]:
-        estado, detalle = funcion_dp(linea_funcion)
-    elif "MOSTRAR" in linea_funcion[0]:
-        parametros = re.split(r'\(',linea_funcion[0])
-        estado, detalle = funcion_mostrar(parametros[1][:-1])
-
-    elif "if" == linea_funcion[0]:
+    if "if" == linea_funcion[0]:
         condicion = re.sub(r'\(|\)',"",linea_funcion[1])
         estado , detalle = verificar_if(condicion)
 
         if estado == True and detalle == True:
             bloque_if =True
             #hacer el if
-        else:
+        elif estado == True and detalle == False:
             bloque_else=True
+            continuacion = True
             #hacer el else
-
+ 
     elif "}" == linea_funcion[0] and len(linea_funcion) >1:
         #finaliza un bloque if y empieza else
         if bloque_if:
             bloque_if = False
+            continuacion = True
+        else:
+            continuacion = False
 
     elif "}" == linea_funcion[0] and len(linea_funcion) ==1:
         #finaliza un bloque else
         bloque_else=False
+        continuacion = False
 
+    #espacio para poner continue
+    if continuacion:
+        print(numero_linea)
+        continue
+
+
+    elif "DEFINE" == linea_funcion[0]:
+        estado, detalle = definicion(linea_funcion)
+
+    elif "DP" == linea_funcion[0]:
+        estado, detalle = funcion_dp(linea_funcion)
+
+    elif "MOSTRAR" in linea_funcion[0]:
+        parametros = re.split(r'\(',linea_funcion[0])
+        estado, detalle = funcion_mostrar(parametros[1][:-1])
 
     if estado == False:
         Error(detalle, numero_linea)
