@@ -5,11 +5,36 @@ mayusculas = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
               'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 minusculas = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 
               'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-numeros = [0,1,2,3,4,5,6,7,8,9]
+
 #para restringir iterados hay que implementar una pila
 bloque_if = False
 bloque_else = False
 continuacion = False
+numeros = r"(\d+)"
+bools = r"(True | False)"
+strings = r"(#.+#)"
+
+opciones = f"({numeros} | {strings} | {bools})"
+
+
+tipo_var = re.compile(r"(\$_[A-Z][a-z]*[A-Z]*)")
+
+tipo_define = re.compile(r"(^DEFINE)\s+"+ tipo_var.pattern)
+
+tipo_dp_asig = re.compile(r"(^DP)\s+" + tipo_var + r"\s+(^ASIG)\s+" +  opciones )
+
+tipo_dp_gen = re.compile(r"(^DP)\s+" + tipo_var+ r" \s+ [\+ | == | \* | > ] \s+" + (opciones | tipo_var) + r"\s" + (opciones | tipo_var))
+
+tipo_mostrar = re.compile(r"^MOSTRAR({tipo_var})")
+
+tipo_if = re.compile(r"(^if)\s+\(" + tipo_var + r"^\)\s+" r"^{")
+
+tipo_else = re.compile(r"^\}\s+" + r"^else\s+" + r"^\{")
+
+cierre_llaves = re.compile(r"^\}")
+
+def picar(linea_funcion):
+    return
 
 def Error(tipo, linea):
     print(tipo)
