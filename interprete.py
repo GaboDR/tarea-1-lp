@@ -11,27 +11,37 @@ bloque_if = False
 bloque_else = False
 continuacion = False
 numeros = r"(\d+)"
-bools = r"(True | False)"
+bools = r"(True|False)"
 strings = r"(#.+#)"
-
-opciones = f"({numeros} | {strings} | {bools})"
-
 
 tipo_var = re.compile(r"(\$_[A-Z][a-z]*[A-Z]*)")
 
-tipo_define = re.compile(r"(^DEFINE)\s+"+ tipo_var.pattern)
+opciones = f"({numeros}|{strings}|{bools})"
 
-tipo_dp_asig = re.compile(r"(^DP)\s+" + tipo_var + r"\s+(^ASIG)\s+" +  opciones )
+opciones_asig = f"({numeros}|{strings}|{bools}|{tipo_var})"
 
-tipo_dp_gen = re.compile(r"(^DP)\s+" + tipo_var+ r" \s+ [\+ | == | \* | > ] \s+" + (opciones | tipo_var) + r"\s" + (opciones | tipo_var))
+opciones_num = f"({numeros}|{tipo_var})"
 
-tipo_mostrar = re.compile(r"^MOSTRAR({tipo_var})")
+opciones_num_str = f"({numeros}|{strings}|{tipo_var})"
 
-tipo_if = re.compile(r"(^if)\s+\(" + tipo_var + r"^\)\s+" r"^{")
+#definicione de lineas
+tipo_define = re.compile(r"(DEFINE)\s+"+ tipo_var.pattern)
 
-tipo_else = re.compile(r"^\}\s+" + r"^else\s+" + r"^\{")
+tipo_dp_asig = re.compile(r"(DP)\s+" + tipo_var.pattern + r"\s+(ASIG)\s+" +  opciones_asig )
 
-cierre_llaves = re.compile(r"^\}")
+tipo_dp_num = re.compile(r"(DP)\s+" + tipo_var.pattern + r"\s+(\+|==|\*|>)\s+" +  opciones_num + r"\s+" + opciones_num)
+
+tipo_dp_num_str = re.compile(r"(^DP)\s+" + tipo_var.pattern + r"\s+(\+|==)\s+" + opciones_num_str + r"\s+" + opciones_num_str)
+
+tipo_mostrar = re.compile(rf"^MOSTRAR\({tipo_var.pattern}\)")
+
+tipo_if = re.compile(r"if\s+\(" + tipo_var.pattern + r"\)\s+\{")
+
+tipo_else = re.compile(r"\}\s+" + r"else\s+" + r"\{")
+
+cierre_llaves = re.compile(r"^\}$")
+
+tipos_lineas = [tipo_define, tipo_dp_asig, tipo_dp_num, tipo_dp_num_str, tipo_mostrar, tipo_if, tipo_else, cierre_llaves]
 
 def picar(linea_funcion):
     return
@@ -148,13 +158,23 @@ def verificar_if(cond):
     return [False, error]
 
 
+
 archivo = open("codigo.txt", "r")
 numero_linea = 0
 for linea in archivo:
     #print(bloque_if, bloque_else, continuacion)
     numero_linea +=1 
     linea=linea.strip()
-    
+
+    i = 0
+    for tipo in tipos_lineas:
+        coincidencias = tipo.match(linea).groups()
+        if i == 0:
+
+
+
+
+    """"
     linea_str= re.split(r'#',linea)
     linea_funcion=re.split(r'\s+',linea_str[0])
 
@@ -169,6 +189,7 @@ for linea in archivo:
         linea_funcion.append(string1)  
     
     linea_funcion = list(filter(None, linea_funcion))
+    """"
 
     #print(linea_funcion)
 
