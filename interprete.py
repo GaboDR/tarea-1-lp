@@ -10,37 +10,30 @@ minusculas = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
 bloque_if = False
 bloque_else = False
 continuacion = False
-numeros = r"(\d+)"
-bools = r"(True|False)"
-strings = r"(#.+#)"
 
-tipo_var = re.compile(r"(\$_[A-Z][a-z]*[A-Z]*)")
+# Definir las expresiones regulares
+numeros = r"\d+"  # Captura el número
+bools = r"True|False"  # Captura True o False
+strings = r"#.+#"  # Captura el string entre #
+tipo_var = r"\$_[A-Z][a-zA-Z]*"  # Captura el tipo de variable
 
+# Opciones con captura agrupada
 opciones = f"({numeros}|{strings}|{bools})"
-
 opciones_asig = f"({numeros}|{strings}|{bools}|{tipo_var})"
-
 opciones_num = f"({numeros}|{tipo_var})"
-
 opciones_num_str = f"({numeros}|{strings}|{tipo_var})"
 
-#definicione de lineas
-tipo_define = re.compile(r"(DEFINE)\s+"+ tipo_var.pattern)
-
-tipo_dp_asig = re.compile(r"(DP)\s+" + tipo_var.pattern + r"\s+(ASIG)\s+" +  opciones_asig )
-
-tipo_dp_num = re.compile(r"(DP)\s+" + tipo_var.pattern + r"\s+(\+|==|\*|>)\s+" +  opciones_num + r"\s+" + opciones_num)
-
-tipo_dp_num_str = re.compile(r"(^DP)\s+" + tipo_var.pattern + r"\s+(\+|==)\s+" + opciones_num_str + r"\s+" + opciones_num_str)
-
-tipo_mostrar = re.compile(rf"^MOSTRAR\({tipo_var.pattern}\)")
-
-tipo_if = re.compile(r"if\s+\(" + tipo_var.pattern + r"\)\s+\{")
-
-tipo_else = re.compile(r"\}\s+" + r"else\s+" + r"\{")
-
+# Definiciones de líneas
+tipo_define = re.compile(r"(DEFINE)\s+" + f"({tipo_var})")
+tipo_dp_asig = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(ASIG)\s+" + opciones_asig)
+tipo_dp_num = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==|\*|>)\s+" + opciones_num + r"\s+" + opciones_num)
+tipo_dp_num_str = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==)\s+" + opciones_num_str + r"\s+" + opciones_num_str)
+tipo_mostrar = re.compile(rf"^MOSTRAR\("+ f"({tipo_var})\)")
+tipo_if = re.compile(r"if\s+\(" + f"({tipo_var})" + r"\)\s+\{")
+tipo_else = re.compile(r"\}\s+else\s+\{")
 cierre_llaves = re.compile(r"^\}$")
 
+# Agrupar todas las expresiones regulares
 tipos_lineas = [tipo_define, tipo_dp_asig, tipo_dp_num, tipo_dp_num_str, tipo_mostrar, tipo_if, tipo_else, cierre_llaves]
 
 def picar(linea_funcion):
@@ -157,86 +150,111 @@ def verificar_if(cond):
         error = "variable no definida"
     return [False, error]
 
+def ejec_def(linea_div):
+    var = linea_div[2]
+    if var not in variables:
+        variables[var] = None
+        return [True, None]
+    return [False, "variable ya existente"]
+
+def ejec_dp_asig(linea_div):
+    _ , var, _, valor = linea_div
+    if var in variables:
+        variables[var] = valor
+        return [True, None]
+    return [False, "variable no existente"]
+
+def ejec_dp_num(linea_div):
+    _, var,operador, par1, par2 = linea_div
 
 
-archivo = open("codigo.txt", "r")
-numero_linea = 0
-for linea in archivo:
-    #print(bloque_if, bloque_else, continuacion)
-    numero_linea +=1 
-    linea=linea.strip()
 
-    i = 0
-    for tipo in tipos_lineas:
-        coincidencias = tipo.match(linea).groups()
-        if i == 0:
+with open("codigo.txt", "r") as archivo:
+    numero_linea = 0
+    for linea in archivo:
+        numero_linea += 1 
+        linea = linea.strip()
+        #print(linea)
+        i = -1
+        for tipo in tipos_lineas:
+            i += 1
+            match = tipo.fullmatch(linea)
+            if match:
+                coincidencias = match.groups()
+                print(coincidencias, numero_linea, i)
+                break #al final
+'''
+                
+                if i == 0:
+                    estado, detalle = ejec_def(coincidencias)
+                    break
+                elif i == 1:
+                    estado, detalle = 
+        
 
 
+        
+        linea_str= re.split(r'#',linea)
+        linea_funcion=re.split(r'\s+',linea_str[0])
 
+        if len(linea_str) > 2:
+            string1= "#"+linea_str[1]
+            string2= "#"+linea_str[2]
 
-    """"
-    linea_str= re.split(r'#',linea)
-    linea_funcion=re.split(r'\s+',linea_str[0])
-
-    if len(linea_str) > 2:
-        string1= "#"+linea_str[1]
-        string2= "#"+linea_str[2]
-
-        linea_funcion.append(string1)
-        linea_funcion.append(string2)
-    elif len(linea_str) > 1:
-        string1= "#"+linea_str[1]
-        linea_funcion.append(string1)  
+            linea_funcion.append(string1)
+            linea_funcion.append(string2)
+        elif len(linea_str) > 1:
+            string1= "#"+linea_str[1]
+            linea_funcion.append(string1)  
+        
+        linea_funcion = list(filter(None, linea_funcion))
     
-    linea_funcion = list(filter(None, linea_funcion))
-    """"
 
-    #print(linea_funcion)
+        #print(linea_funcion)
 
-    if "if" == linea_funcion[0]:
-        condicion = re.sub(r'\(|\)',"",linea_funcion[1])
-        estado , detalle = verificar_if(condicion)
+        if "if" == linea_funcion[0]:
+            condicion = re.sub(r'\(|\)',"",linea_funcion[1])
+            estado , detalle = verificar_if(condicion)
 
-        if estado == True and detalle == True:
-            bloque_if =True
-            #hacer el if
-        elif estado == True and detalle == False:
-            bloque_else=True
-            continuacion = True
-            #hacer el else
- 
-    elif "}" == linea_funcion[0] and len(linea_funcion) >1:
-        #finaliza un bloque if y empieza else
-        if bloque_if:
-            bloque_if = False
-            continuacion = True
-        else:
+            if estado == True and detalle == True:
+                bloque_if =True
+                #hacer el if
+            elif estado == True and detalle == False:
+                bloque_else=True
+                continuacion = True
+                #hacer el else
+    
+        elif "}" == linea_funcion[0] and len(linea_funcion) >1:
+            #finaliza un bloque if y empieza else
+            if bloque_if:
+                bloque_if = False
+                continuacion = True
+            else:
+                continuacion = False
+
+        elif "}" == linea_funcion[0] and len(linea_funcion) ==1:
+            #finaliza un bloque else
+            bloque_else=False
             continuacion = False
 
-    elif "}" == linea_funcion[0] and len(linea_funcion) ==1:
-        #finaliza un bloque else
-        bloque_else=False
-        continuacion = False
-
-    #espacio para poner continue
-    if continuacion:
-        print(numero_linea)
-        continue
+        #espacio para poner continue
+        if continuacion:
+            print(numero_linea)
+            continue
 
 
-    elif "DEFINE" == linea_funcion[0]:
-        estado, detalle = definicion(linea_funcion)
+        elif "DEFINE" == linea_funcion[0]:
+            estado, detalle = definicion(linea_funcion)
 
-    elif "DP" == linea_funcion[0]:
-        estado, detalle = funcion_dp(linea_funcion)
+        elif "DP" == linea_funcion[0]:
+            estado, detalle = funcion_dp(linea_funcion)
 
-    elif "MOSTRAR" in linea_funcion[0]:
-        parametros = re.split(r'\(',linea_funcion[0])
-        estado, detalle = funcion_mostrar(parametros[1][:-1])
+        elif "MOSTRAR" in linea_funcion[0]:
+            parametros = re.split(r'\(',linea_funcion[0])
+            estado, detalle = funcion_mostrar(parametros[1][:-1])
 
-    if estado == False:
-        Error(detalle, numero_linea)
-        break
-
-
+        if estado == False:
+            Error(detalle, numero_linea)
+            break
+'''
 archivo.close()
