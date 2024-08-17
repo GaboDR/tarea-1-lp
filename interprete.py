@@ -17,6 +17,8 @@ bools = r"True|False"  # Captura True o False
 strings = r"#.+#"  # Captura el string entre #
 tipo_var = r"\$_[A-Z][a-zA-Z]*"  # Captura el tipo de variable
 
+datos = [numeros, bools, strings, tipo_var]
+
 # Opciones con captura agrupada
 opciones = f"({numeros}|{strings}|{bools})"
 opciones_asig = f"({numeros}|{strings}|{bools}|{tipo_var})"
@@ -36,8 +38,18 @@ cierre_llaves = re.compile(r"^\}$")
 # Agrupar todas las expresiones regulares
 tipos_lineas = [tipo_define, tipo_dp_asig, tipo_dp_num, tipo_dp_num_str, tipo_mostrar, tipo_if, tipo_else, cierre_llaves]
 
-def picar(linea_funcion):
-    return
+def determinar_tipo_y_castear(valor):
+    if re.fullmatch(numeros, valor):
+        print("int")
+        return int(valor)  # Castear a entero
+    elif re.fullmatch(bools, valor):
+        print("bool")
+
+        return valor == "True"  # Castear a booleano
+    elif re.fullmatch(strings, valor):
+        print("str")
+
+        return valor.strip("#")  # Eliminar los #
 
 def Error(tipo, linea):
     print(tipo)
@@ -151,7 +163,7 @@ def verificar_if(cond):
     return [False, error]
 
 def ejec_def(linea_div):
-    var = linea_div[2]
+    _, var = linea_div
     if var not in variables:
         variables[var] = None
         return [True, None]
@@ -159,7 +171,11 @@ def ejec_def(linea_div):
 
 def ejec_dp_asig(linea_div):
     _ , var, _, valor = linea_div
+    if valor in variables:
+        valor = variables[valor]
     if var in variables:
+        valor = determinar_tipo_y_castear(valor)
+        print("alo")
         variables[var] = valor
         return [True, None]
     return [False, "variable no existente"]
@@ -182,7 +198,7 @@ def ejec_dp_num(linea_div):
         else:
             return [False, "variable no definida"]
 
-    if not isinstance(par1,int) or not isinstance(par2,bool):
+    if not isinstance(par1,int) or not isinstance(par2,int):
         return [False, "variable no operable"]
     
     if operador == "+":
@@ -301,12 +317,23 @@ with open("codigo.txt", "r") as archivo:
                 elif i == 4:
                     estado, detalle = funcion_mostrar(coincidencias[0])
                 elif i == 5:
-                    estado, detalle = ejec_if()
+                    estado, detalle = ejec_if(coincidencias[0])
                 elif i == 6:
                     estado, detalle = ejec_if_else()
                 elif i == 7:
                     estado, detalle = ejec_end_else()
                 break
+        if len(continuacion)>0:
+            if continuacion[-1]:
+                print(numero_linea)
+                continue
+        if estado == False:
+            Error(detalle, numero_linea)
+            break
+
+archivo.close()
+"""
+
             else:
                                 
 
@@ -325,9 +352,19 @@ with open("codigo.txt", "r") as archivo:
                     linea_funcion.append(string1)  
                 
                 linea_funcion = list(filter(None, linea_funcion))
-            
-
                 #print(linea_funcion)
+                if "DEFINE" == linea_funcion[0]:
+                    estado, detalle = definicion(linea_funcion)
+
+                elif "DP" == linea_funcion[0]:
+                    estado, detalle = funcion_dp(linea_funcion)
+
+                elif "MOSTRAR" in linea_funcion[0]:
+                    parametros = re.split(r'\(',linea_funcion[0])
+                    estado, detalle = funcion_mostrar(parametros[1][:-1])
+"""
+
+"""
 
                 if "if" == linea_funcion[0]:
                     condicion = re.sub(r'\(|\)',"",linea_funcion[1])
@@ -340,7 +377,6 @@ with open("codigo.txt", "r") as archivo:
                         bloque_else=True
                         continuacion = True
                         #hacer el else
-
             
                 elif "}" == linea_funcion[0] and len(linea_funcion) >1:
                     #finaliza un bloque if y empieza else
@@ -354,25 +390,7 @@ with open("codigo.txt", "r") as archivo:
                     #finaliza un bloque else
                     bloque_else=False
                     continuacion = False
-
+"""
                 #espacio para poner continue
-                if continuacion[-1]:
-                    print(numero_linea)
-                    continue
 
 
-                elif "DEFINE" == linea_funcion[0]:
-                    estado, detalle = definicion(linea_funcion)
-
-                elif "DP" == linea_funcion[0]:
-                    estado, detalle = funcion_dp(linea_funcion)
-
-                elif "MOSTRAR" in linea_funcion[0]:
-                    parametros = re.split(r'\(',linea_funcion[0])
-                    estado, detalle = funcion_mostrar(parametros[1][:-1])
-
-                if estado == False:
-                    Error(detalle, numero_linea)
-                    break
-
-archivo.close()
