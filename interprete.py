@@ -22,32 +22,31 @@ datos = [numeros, bools, strings, tipo_var]
 # Opciones con captura agrupada
 opciones = f"({numeros}|{strings}|{bools})"
 opciones_asig = f"({numeros}|{strings}|{bools}|{tipo_var})"
-opciones_num = f"({numeros}|{tipo_var})"
+#opciones_num = f"({numeros}|{tipo_var})"
 opciones_num_str = f"({numeros}|{strings}|{tipo_var})"
 
 # Definiciones de líneas
 tipo_define = re.compile(r"(DEFINE)\s+" + f"({tipo_var})")
 tipo_dp_asig = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(ASIG)\s+" + opciones_asig)
-tipo_dp_num = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==|\*|>)\s+" + opciones_num + r"\s+" + opciones_num)
-tipo_dp_num_str = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==)\s+" + opciones_num_str + r"\s+" + opciones_num_str)
+#tipo_dp_num = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==|\*|>)\s+" + opciones_num + r"\s+" + opciones_num)
+tipo_dp_num_str = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==|\*|>)\s+" + opciones_num_str + r"\s+" + opciones_num_str)
 tipo_mostrar = re.compile(rf"^MOSTRAR\("+ f"({tipo_var})\)")
 tipo_if = re.compile(r"if\s+\(" + f"({tipo_var})" + r"\)\s+\{")
 tipo_else = re.compile(r"\}\s+else\s+\{")
 cierre_llaves = re.compile(r"^\}$")
 
 # Agrupar todas las expresiones regulares
-tipos_lineas = [tipo_define, tipo_dp_asig, tipo_dp_num, tipo_dp_num_str, tipo_mostrar, tipo_if, tipo_else, cierre_llaves]
+tipos_lineas = [tipo_define, tipo_dp_asig,  tipo_dp_num_str, tipo_mostrar, ]
+
+tipos_cond = [tipo_if, tipo_else, cierre_llaves]
 
 def determinar_tipo_y_castear(valor):
     if re.fullmatch(numeros, valor):
-        print("int")
         return int(valor)  # Castear a entero
     elif re.fullmatch(bools, valor):
-        print("bool")
 
         return valor == "True"  # Castear a booleano
     elif re.fullmatch(strings, valor):
-        print("str")
 
         return valor.strip("#")  # Eliminar los #
 
@@ -175,52 +174,9 @@ def ejec_dp_asig(linea_div):
         valor = variables[valor]
     if var in variables:
         valor = determinar_tipo_y_castear(valor)
-        print("alo")
         variables[var] = valor
         return [True, None]
     return [False, "variable no existente"]
-
-def ejec_dp_num(linea_div):
-    _, var,operador, par1, par2 = linea_div
-    if var not in variables:
-        return [False, "variable no definida"]
-    match1 = re.match(r"\$_", par1)
-    if match1:
-        if par1 in variables:
-            par1 = variables[par1]
-        else:
-            return [False, "variable no definida"]
-
-    match2 = re.match(r"\$_", par2)
-    if match2:
-        if par2 in variables:
-            par2 = variables[par2]
-        else:
-            return [False, "variable no definida"]
-
-    if not isinstance(par1,int) or not isinstance(par2,int):
-        return [False, "variable no operable"]
-    
-    if operador == "+":
-        resultado = par1 + par2
-        variables[var] = resultado
-        return [True, None]
-    elif operador == "==":
-        if par1 == par2:
-            variables[var] = True
-        else:
-            variables[var] = False
-        return [True, None]
-    elif operador == "*":
-        resultado = par1 * par2
-        variables[var] = resultado
-        return [True, None]
-    else:
-        if par1 > par2:
-            variables[var] = True
-        else:
-            variables[var] = False
-        return [True, None]
 
 def ejec_dp_num_str(linea_div):
     _, var,operador, par1, par2 = linea_div
@@ -239,20 +195,43 @@ def ejec_dp_num_str(linea_div):
             par2 = variables[par2]
         else:
             return [False, "variable no definida"]
+
     if isinstance(par1,bool) or isinstance(par2,bool):
         return [False, "variable no operable"]
-
+    
     if operador == "+":
+        if isinstance(par1,str) or isinstance(par2,str):
+            par1 = str(par1)
+            par2 = str(par2)
         resultado = par1 + par2
         variables[var] = resultado
         return [True, None]
     elif operador == "==":
+        if isinstance(par1,str) or isinstance(par2,str):
+            par1 = str(par1)
+            par2 = str(par2)
         if par1 == par2:
             variables[var] = True
         else:
             variables[var] = False
         return [True, None]
-
+    elif operador == "*":
+        if isinstance(par1,int) or isinstance(par2,int):
+        
+            resultado = par1 * par2
+            variables[var] = resultado
+            return [True, None]
+        return [False, "variable no operable"]
+        
+    else:
+        if isinstance(par1,int) or isinstance(par2,int):
+            if par1 > par2:
+                variables[var] = True
+            else:
+                variables[var] = False
+            return [True, None]
+        return [False, "variable no operable"]
+        
 def ejec_if(cond):
     estado, detalle = verificar_if(cond)
     if estado == True and detalle == True:
@@ -288,13 +267,65 @@ def ejec_end_else():
     continuacion.pop()
     return [True, None]
 
+def analisis_sintaxis(linea):
+    linea_str= re.split(r'#',linea)
+    linea_funcion=re.split(r'\s+',linea_str[0])
+
+    if len(linea_str) > 2:
+        string1= "#"+linea_str[1]
+        string2= "#"+linea_str[2]
+
+        linea_funcion.append(string1)
+        linea_funcion.append(string2)
+    elif len(linea_str) > 1:
+        string1= "#"+linea_str[1]
+        linea_funcion.append(string1)  
+    
+    linea_funcion = list(filter(None, linea_funcion))
+    #print(linea_funcion)
+    if "DEFINE" == linea_funcion[0]:
+        estado, detalle = definicion(linea_funcion)
+
+    elif "DP" == linea_funcion[0]:
+        estado, detalle = funcion_dp(linea_funcion)
+
+    elif "MOSTRAR" in linea_funcion[0]:
+        parametros = re.split(r'\(',linea_funcion[0])
+        estado, detalle = funcion_mostrar(parametros[1][:-1])
+    else:
+        estado=False
+        detalle = "sintaxis no reconocida"
+    return estado, detalle
 
 with open("codigo.txt", "r") as archivo:
     numero_linea = 0
     for linea in archivo:
         numero_linea += 1 
         linea = linea.strip()
-        #print(linea)
+        print(linea)
+        j = -1
+        for condcional in tipos_cond:
+            j += 1
+            match = condcional.fullmatch(linea)
+            if match:
+                coincidencias = match.groups()
+                print(coincidencias, numero_linea, j)
+
+                
+                if j == 0:
+                    estado, detalle = ejec_if(coincidencias[0])
+                    
+                elif j == 1:
+                    estado, detalle = ejec_if_else()
+                
+                elif j == 2:
+                    estado, detalle = ejec_end_else()
+
+        if len(continuacion)>0:
+            print(bloque_if, bloque_else, continuacion)
+            if continuacion[-1]:
+                continue
+
         i = -1
         for tipo in tipos_lineas:
             i += 1
@@ -302,7 +333,6 @@ with open("codigo.txt", "r") as archivo:
             if match:
                 coincidencias = match.groups()
                 print(coincidencias, numero_linea, i)
-
                 
                 if i == 0:
                     estado, detalle = ejec_def(coincidencias)
@@ -311,33 +341,12 @@ with open("codigo.txt", "r") as archivo:
                     estado, detalle = ejec_dp_asig(coincidencias)
                 
                 elif i == 2:
-                    estado, detalle = ejec_dp_num(coincidencias)
-                elif i == 3:
                     estado, detalle = ejec_dp_num_str(coincidencias)
-                elif i == 4:
+                elif i == 3:
                     estado, detalle = funcion_mostrar(coincidencias[0])
-                elif i == 5:
-                    estado, detalle = ejec_if(coincidencias[0])
-                elif i == 6:
-                    estado, detalle = ejec_if_else()
-                elif i == 7:
-                    estado, detalle = ejec_end_else()
                 break
-        if len(continuacion)>0:
-            if continuacion[-1]:
-                print(numero_linea)
-                continue
-        if estado == False:
-            Error(detalle, numero_linea)
-            break
-
-archivo.close()
-"""
-
             else:
-                                
-
-                
+                #analisis de no coincidencias
                 linea_str= re.split(r'#',linea)
                 linea_funcion=re.split(r'\s+',linea_str[0])
 
@@ -362,35 +371,12 @@ archivo.close()
                 elif "MOSTRAR" in linea_funcion[0]:
                     parametros = re.split(r'\(',linea_funcion[0])
                     estado, detalle = funcion_mostrar(parametros[1][:-1])
-"""
+                else:
+                    estado=False
+                    detalle = "sintaxis no reconocida"
+        if estado == False:
+            Error(detalle, numero_linea)
+            break
 
-"""
-
-                if "if" == linea_funcion[0]:
-                    condicion = re.sub(r'\(|\)',"",linea_funcion[1])
-                    estado , detalle = verificar_if(condicion)
-
-                    if estado == True and detalle == True:
-                        bloque_if =True
-                        #hacer el if
-                    elif estado == True and detalle == False:
-                        bloque_else=True
-                        continuacion = True
-                        #hacer el else
-            
-                elif "}" == linea_funcion[0] and len(linea_funcion) >1:
-                    #finaliza un bloque if y empieza else
-                    if bloque_if:
-                        bloque_if = False
-                        continuacion = True
-                    else:
-                        continuacion = False
-
-                elif "}" == linea_funcion[0] and len(linea_funcion) ==1:
-                    #finaliza un bloque else
-                    bloque_else=False
-                    continuacion = False
-"""
-                #espacio para poner continue
-
+archivo.close()
 
