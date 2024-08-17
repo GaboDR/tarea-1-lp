@@ -7,9 +7,9 @@ minusculas = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
               'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
 #para restringir iterados hay que implementar una pila
-bloque_if = False
-bloque_else = False
-continuacion = False
+bloque_if = []
+bloque_else = []
+continuacion = []
 
 # Definir las expresiones regulares
 numeros = r"\d+"  # Captura el número
@@ -137,7 +137,7 @@ def funcion_mostrar(variable):
         printear.write(str(variables[variable]))
         printear.close()
         return [True, None]
-    return [False, "no existe"]
+    return [False, "variable no existente"]
 
 def verificar_if(cond):
     if cond in variables:
@@ -166,7 +166,111 @@ def ejec_dp_asig(linea_div):
 
 def ejec_dp_num(linea_div):
     _, var,operador, par1, par2 = linea_div
+    if var not in variables:
+        return [False, "variable no definida"]
+    match1 = re.match(r"\$_", par1)
+    if match1:
+        if par1 in variables:
+            par1 = variables[par1]
+        else:
+            return [False, "variable no definida"]
 
+    match2 = re.match(r"\$_", par2)
+    if match2:
+        if par2 in variables:
+            par2 = variables[par2]
+        else:
+            return [False, "variable no definida"]
+
+    if not isinstance(par1,int) or not isinstance(par2,bool):
+        return [False, "variable no operable"]
+    
+    if operador == "+":
+        resultado = par1 + par2
+        variables[var] = resultado
+        return [True, None]
+    elif operador == "==":
+        if par1 == par2:
+            variables[var] = True
+        else:
+            variables[var] = False
+        return [True, None]
+    elif operador == "*":
+        resultado = par1 * par2
+        variables[var] = resultado
+        return [True, None]
+    else:
+        if par1 > par2:
+            variables[var] = True
+        else:
+            variables[var] = False
+        return [True, None]
+
+def ejec_dp_num_str(linea_div):
+    _, var,operador, par1, par2 = linea_div
+    if var not in variables:
+        return [False, "variable no definida"]
+    match1 = re.match(r"\$_", par1)
+    if match1:
+        if par1 in variables:
+            par1 = variables[par1]
+        else:
+            return [False, "variable no definida"]
+
+    match2 = re.match(r"\$_", par2)
+    if match2:
+        if par2 in variables:
+            par2 = variables[par2]
+        else:
+            return [False, "variable no definida"]
+    if isinstance(par1,bool) or isinstance(par2,bool):
+        return [False, "variable no operable"]
+
+    if operador == "+":
+        resultado = par1 + par2
+        variables[var] = resultado
+        return [True, None]
+    elif operador == "==":
+        if par1 == par2:
+            variables[var] = True
+        else:
+            variables[var] = False
+        return [True, None]
+
+def ejec_if(cond):
+    estado, detalle = verificar_if(cond)
+    if estado == True and detalle == True:
+        #hacer el if
+        bloque_if.append(True)
+        bloque_else.append(False)
+        continuacion.append(False)
+        return [True, None]
+    elif estado == True and detalle == False:
+        #hacer el else
+        bloque_else.append(True)
+        continuacion.append(True)
+        bloque_if.append(False)
+        return [True, None]
+    return [estado, detalle]
+
+def ejec_if_else():
+    #finaliza un bloque if y empieza else
+    if bloque_if[-1]:
+        bloque_if.pop()
+        bloque_if.append(False)
+        continuacion.pop()
+        continuacion.append(True)
+    else:
+        continuacion.pop()
+        continuacion.append(False)
+    return [True, None]
+
+def ejec_end_else():
+    #finaliza bloque condicional
+    bloque_if.pop()
+    bloque_else.pop()
+    continuacion.pop()
+    return [True, None]
 
 
 with open("codigo.txt", "r") as archivo:
@@ -182,79 +286,93 @@ with open("codigo.txt", "r") as archivo:
             if match:
                 coincidencias = match.groups()
                 print(coincidencias, numero_linea, i)
-                break #al final
-'''
+
                 
                 if i == 0:
                     estado, detalle = ejec_def(coincidencias)
-                    break
+                    
                 elif i == 1:
-                    estado, detalle = 
-        
-
-
-        
-        linea_str= re.split(r'#',linea)
-        linea_funcion=re.split(r'\s+',linea_str[0])
-
-        if len(linea_str) > 2:
-            string1= "#"+linea_str[1]
-            string2= "#"+linea_str[2]
-
-            linea_funcion.append(string1)
-            linea_funcion.append(string2)
-        elif len(linea_str) > 1:
-            string1= "#"+linea_str[1]
-            linea_funcion.append(string1)  
-        
-        linea_funcion = list(filter(None, linea_funcion))
-    
-
-        #print(linea_funcion)
-
-        if "if" == linea_funcion[0]:
-            condicion = re.sub(r'\(|\)',"",linea_funcion[1])
-            estado , detalle = verificar_if(condicion)
-
-            if estado == True and detalle == True:
-                bloque_if =True
-                #hacer el if
-            elif estado == True and detalle == False:
-                bloque_else=True
-                continuacion = True
-                #hacer el else
-    
-        elif "}" == linea_funcion[0] and len(linea_funcion) >1:
-            #finaliza un bloque if y empieza else
-            if bloque_if:
-                bloque_if = False
-                continuacion = True
+                    estado, detalle = ejec_dp_asig(coincidencias)
+                
+                elif i == 2:
+                    estado, detalle = ejec_dp_num(coincidencias)
+                elif i == 3:
+                    estado, detalle = ejec_dp_num_str(coincidencias)
+                elif i == 4:
+                    estado, detalle = funcion_mostrar(coincidencias[0])
+                elif i == 5:
+                    estado, detalle = ejec_if()
+                elif i == 6:
+                    estado, detalle = ejec_if_else()
+                elif i == 7:
+                    estado, detalle = ejec_end_else()
+                break
             else:
-                continuacion = False
+                                
 
-        elif "}" == linea_funcion[0] and len(linea_funcion) ==1:
-            #finaliza un bloque else
-            bloque_else=False
-            continuacion = False
+                
+                linea_str= re.split(r'#',linea)
+                linea_funcion=re.split(r'\s+',linea_str[0])
 
-        #espacio para poner continue
-        if continuacion:
-            print(numero_linea)
-            continue
+                if len(linea_str) > 2:
+                    string1= "#"+linea_str[1]
+                    string2= "#"+linea_str[2]
+
+                    linea_funcion.append(string1)
+                    linea_funcion.append(string2)
+                elif len(linea_str) > 1:
+                    string1= "#"+linea_str[1]
+                    linea_funcion.append(string1)  
+                
+                linea_funcion = list(filter(None, linea_funcion))
+            
+
+                #print(linea_funcion)
+
+                if "if" == linea_funcion[0]:
+                    condicion = re.sub(r'\(|\)',"",linea_funcion[1])
+                    estado , detalle = verificar_if(condicion)
+
+                    if estado == True and detalle == True:
+                        bloque_if =True
+                        #hacer el if
+                    elif estado == True and detalle == False:
+                        bloque_else=True
+                        continuacion = True
+                        #hacer el else
+
+            
+                elif "}" == linea_funcion[0] and len(linea_funcion) >1:
+                    #finaliza un bloque if y empieza else
+                    if bloque_if:
+                        bloque_if = False
+                        continuacion = True
+                    else:
+                        continuacion = False
+
+                elif "}" == linea_funcion[0] and len(linea_funcion) ==1:
+                    #finaliza un bloque else
+                    bloque_else=False
+                    continuacion = False
+
+                #espacio para poner continue
+                if continuacion[-1]:
+                    print(numero_linea)
+                    continue
 
 
-        elif "DEFINE" == linea_funcion[0]:
-            estado, detalle = definicion(linea_funcion)
+                elif "DEFINE" == linea_funcion[0]:
+                    estado, detalle = definicion(linea_funcion)
 
-        elif "DP" == linea_funcion[0]:
-            estado, detalle = funcion_dp(linea_funcion)
+                elif "DP" == linea_funcion[0]:
+                    estado, detalle = funcion_dp(linea_funcion)
 
-        elif "MOSTRAR" in linea_funcion[0]:
-            parametros = re.split(r'\(',linea_funcion[0])
-            estado, detalle = funcion_mostrar(parametros[1][:-1])
+                elif "MOSTRAR" in linea_funcion[0]:
+                    parametros = re.split(r'\(',linea_funcion[0])
+                    estado, detalle = funcion_mostrar(parametros[1][:-1])
 
-        if estado == False:
-            Error(detalle, numero_linea)
-            break
-'''
+                if estado == False:
+                    Error(detalle, numero_linea)
+                    break
+
 archivo.close()
