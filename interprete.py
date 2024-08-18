@@ -1,10 +1,6 @@
 import re
 
 variables = {}
-mayusculas = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
-              'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-minusculas = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 
-              'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
 #para restringir iterados hay que implementar una pila
 bloque_if = []
@@ -22,16 +18,14 @@ datos = [numeros, bools, strings, tipo_var]
 # Opciones con captura agrupada
 opciones = f"({numeros}|{strings}|{bools})"
 opciones_asig = f"({numeros}|{strings}|{bools}|{tipo_var})"
-#opciones_num = f"({numeros}|{tipo_var})"
 opciones_num_str = f"({numeros}|{strings}|{tipo_var})"
 
 # Definiciones de líneas
 tipo_define = re.compile(r"(DEFINE)\s+" + f"({tipo_var})")
 tipo_dp_asig = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(ASIG)\s+" + opciones_asig)
-#tipo_dp_num = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==|\*|>)\s+" + opciones_num + r"\s+" + opciones_num)
 tipo_dp_num_str = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==|\*|>)\s+" + opciones_num_str + r"\s+" + opciones_num_str)
 tipo_mostrar = re.compile(rf"^MOSTRAR\("+ f"({tipo_var})\)")
-tipo_if = re.compile(r"if\s+\(" + f"({tipo_var})" + r"\)\s+\{")
+tipo_if = re.compile(r"if\(" + f"({tipo_var})" + r"\)\s+\{")
 tipo_else = re.compile(r"\}\s+else\s+\{")
 cierre_llaves = re.compile(r"^\}$")
 
@@ -42,105 +36,16 @@ tipos_cond = [tipo_if, tipo_else, cierre_llaves]
 
 def determinar_tipo_y_castear(valor):
     if re.fullmatch(numeros, valor):
-        return int(valor)  # Castear a entero
+        return int(valor) 
     elif re.fullmatch(bools, valor):
 
-        return valor == "True"  # Castear a booleano
+        return valor == "True" 
     elif re.fullmatch(strings, valor):
 
-        return valor.strip("#")  # Eliminar los #
+        return valor.strip("#") 
 
 def Error(tipo, linea):
-    print(tipo)
-    print(linea)
-
-def definicion(linea):
-    valido = r'^\$_'
-    match=re.match(valido,linea[1])
-    if match:
-        if linea[1][2] in mayusculas:
-            nombre = linea[1]           #se guarda la variable con el $_
-            if nombre in variables:
-                error = "ya existente"
-            else:
-                variables[nombre]=None
-                return [True, None]
-        else:
-            error = "mayusculas"
-    else:
-        error = "mal inicio"
-    return [False, error]
-
-def funcion_dp(linea):
-    error = "sintaxsis desconocida"
-    if linea[1] in variables:
-        if linea[2] == "ASIG":
-            if re.match(r'^\#', linea[3]) :
-                linea[3] = re.sub(r'^\#',"",linea[3])
-                variables[linea[1]]= linea[3]
-            elif linea[3] == "True":
-                variables[linea[1]]= True
-            elif linea[3] == "False":
-                variables[linea[1]]= False
-
-            else:
-                variables[linea[1]] = int(linea[3])
-
-            return [True, None]
-        if any(linea[i] in [True, False] or variables.get(linea[i]) in [True, False] for i in [3, 4]):
-            error = "no operable"
-        else:    
-            par1 = linea[3]
-            par2 = linea[4]
-            
-            if par1 in variables:
-                par1 = variables[par1]
-            if par2 in variables:
-                par2 = variables[par2]
-            if linea[2] in ["+", "=="]:
-                if isinstance(par1, str) or isinstance(par2, str):
-                    par1= str(par1)
-                    par2= str(par2)
-                
-                if linea[2] == "+":
-                    
-                    resultado= par1 + par2
-                    variables[linea[1]]=resultado
-                    return [True, None]
-                else:
-                    if par1 == par2:
-
-                        variables[linea[1]]=True
-                        return [True, None]
-                    else:
-                        variables[linea[1]]=False
-                        return [True, None]
-            
-            elif linea[2] in ["*", ">"]:
-
-                if isinstance(par1, str) or isinstance(par2, str):
-                    error = "no valido"
-
-                else:
-                    if linea[2] == "*":
-                        resultado = int(par1) * int(par2)
-                        variables[linea[1]]=resultado
-
-                        return [True, None]
-
-                    else:
-                        if par1 > par2:
-
-                            variables[linea[1]]=True
-                            return [True, None]
-                        else:
-                            variables[linea[1]]=False
-
-                            return [True, None]
-    else:
-        error = "no variable"
-
-    return [False, error]
+    print(f"Error en la linea {linea}, {tipo}")
 
 def funcion_mostrar(variable):
     if variable in variables:
@@ -156,7 +61,7 @@ def verificar_if(cond):
         if isinstance(resultado, bool):
             return [True, resultado]
         else:
-            error = "tipo incorrecto"
+            error = "variable no booleana"
     else:
         error = "variable no definida"
     return [False, error]
@@ -268,41 +173,60 @@ def ejec_end_else():
     return [True, None]
 
 def analisis_sintaxis(linea):
-    linea_str= re.split(r'#',linea)
-    linea_funcion=re.split(r'\s+',linea_str[0])
-
-    if len(linea_str) > 2:
-        string1= "#"+linea_str[1]
-        string2= "#"+linea_str[2]
-
-        linea_funcion.append(string1)
-        linea_funcion.append(string2)
-    elif len(linea_str) > 1:
-        string1= "#"+linea_str[1]
-        linea_funcion.append(string1)  
+    # Intenta detectar cuál parte de la línea es incorrecta
+    partes = linea.split()
     
-    linea_funcion = list(filter(None, linea_funcion))
-    #print(linea_funcion)
-    if "DEFINE" == linea_funcion[0]:
-        estado, detalle = definicion(linea_funcion)
-
-    elif "DP" == linea_funcion[0]:
-        estado, detalle = funcion_dp(linea_funcion)
-
-    elif "MOSTRAR" in linea_funcion[0]:
-        parametros = re.split(r'\(',linea_funcion[0])
-        estado, detalle = funcion_mostrar(parametros[1][:-1])
-    else:
-        estado=False
-        detalle = "sintaxis no reconocida"
-    return estado, detalle
+    if not partes:
+        return False, "línea vacía o incompleta"
+    
+    # Revisa si la primera palabra clave coincide con alguna esperada
+    palabra_clave = partes[0]
+    
+    if palabra_clave not in ["DEFINE", "DP", "MOSTRAR", "if", "}"]:
+        return False, f"palabra clave no válida: '{palabra_clave}'"
+    
+    # Revisa el formato según la palabra clave detectada
+    if palabra_clave == "DEFINE":
+        if len(partes) != 2 or not re.fullmatch(tipo_var, partes[1]):
+            return False, f"error de sintaxis en DEFINE: se esperaba 'DEFINE $Variable'"
+    
+    elif palabra_clave == "DP":
+        if len(partes) < 4:
+            return False, "error de sintaxis en DP: línea incompleta"
+        
+        if not re.fullmatch(tipo_var, partes[1]):
+            return False, f"variable no válida: '{partes[1]}' en DP"
+        
+        if partes[2] != "ASIG" and partes[2] not in ["+", "==", "*", ">"]:
+            return False, f"aperador no válido en DP: '{partes[2]}'"
+        
+        if not re.fullmatch(opciones_asig, partes[3]):
+            return False, f"valor no válido: '{partes[3]}' en DP"
+    
+    elif palabra_clave == "MOSTRAR":
+        if len(partes) != 2 or not re.fullmatch(tipo_var, partes[1]):
+            return False, "error de sintaxis en MOSTRAR: se esperaba 'MOSTRAR($Variable)'"
+    
+    elif palabra_clave == "if":
+        if len(partes) < 4 or partes[1] != "(" or partes[-1] != "{":
+            return False, "error de sintaxis en if: se esperaba 'if($Variable) {'"
+    
+    elif palabra_clave == "}":
+        # Analizar el formato "} else {"
+        if len(partes) == 3 and partes[1] == "else" and partes[2] == "{":
+            return True, None
+        return False, "error de sintaxis en else: se esperaba '} else {'"
+    
+    return False, "sintaxis no identificado"
 
 with open("codigo.txt", "r") as archivo:
     numero_linea = 0
     for linea in archivo:
+        revision1 = False
+        revision2 = False
         numero_linea += 1 
+        print(numero_linea)
         linea = linea.strip()
-        print(linea)
         j = -1
         for condcional in tipos_cond:
             j += 1
@@ -314,24 +238,28 @@ with open("codigo.txt", "r") as archivo:
                 
                 if j == 0:
                     estado, detalle = ejec_if(coincidencias[0])
+
                     
                 elif j == 1:
                     estado, detalle = ejec_if_else()
                 
                 elif j == 2:
                     estado, detalle = ejec_end_else()
+                revision1 = True  
 
         if len(continuacion)>0:
             print(bloque_if, bloque_else, continuacion)
             if continuacion[-1]:
+                print("@")
                 continue
 
         i = -1
         for tipo in tipos_lineas:
+            
             i += 1
-            match = tipo.fullmatch(linea)
-            if match:
-                coincidencias = match.groups()
+            match2 = tipo.fullmatch(linea)
+            if match2:
+                coincidencias = match2.groups()
                 print(coincidencias, numero_linea, i)
                 
                 if i == 0:
@@ -344,39 +272,14 @@ with open("codigo.txt", "r") as archivo:
                     estado, detalle = ejec_dp_num_str(coincidencias)
                 elif i == 3:
                     estado, detalle = funcion_mostrar(coincidencias[0])
+                revision2 = True
+
                 break
-            else:
-                #analisis de no coincidencias
-                linea_str= re.split(r'#',linea)
-                linea_funcion=re.split(r'\s+',linea_str[0])
-
-                if len(linea_str) > 2:
-                    string1= "#"+linea_str[1]
-                    string2= "#"+linea_str[2]
-
-                    linea_funcion.append(string1)
-                    linea_funcion.append(string2)
-                elif len(linea_str) > 1:
-                    string1= "#"+linea_str[1]
-                    linea_funcion.append(string1)  
-                
-                linea_funcion = list(filter(None, linea_funcion))
-                #print(linea_funcion)
-                if "DEFINE" == linea_funcion[0]:
-                    estado, detalle = definicion(linea_funcion)
-
-                elif "DP" == linea_funcion[0]:
-                    estado, detalle = funcion_dp(linea_funcion)
-
-                elif "MOSTRAR" in linea_funcion[0]:
-                    parametros = re.split(r'\(',linea_funcion[0])
-                    estado, detalle = funcion_mostrar(parametros[1][:-1])
-                else:
-                    estado=False
-                    detalle = "sintaxis no reconocida"
+        if revision1 ==False and revision2 == False:
+            #analisis de no coincidencias
+            estado, detalle = analisis_sintaxis(linea)
         if estado == False:
             Error(detalle, numero_linea)
             break
 
 archivo.close()
-
