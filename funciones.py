@@ -36,13 +36,13 @@ tipos_lineas = [tipo_define, tipo_dp_asig,  tipo_dp_num_str, tipo_mostrar, ]
 tipos_cond = [tipo_if, tipo_else, cierre_llaves]
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : valor de variable extraida del .txt
 ...
 ***
-Tipo de Retorno o None
+Retorna la variable casteada 
 ***
-Breve descripcion de la funcion y el retorno
+El parametro se compara con los 3 datos posibles (booln, int, str) y retorna el valor
+casteado al tipo correspondiente, con los str les extrae los "#"
 """
 def determinar_tipo_y_castear(valor):
     if re.fullmatch(numeros, valor):
@@ -55,43 +55,40 @@ def determinar_tipo_y_castear(valor):
         return valor.strip("#") 
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : str con la descripcion del error
+Parametro 2 : int con el numero de la linea donde fallo el codigo
 ...
 ***
-Tipo de Retorno o None
+No tiene retorno
 ***
-Breve descripcion de la funcion y el retorno
+la funcion muestra en consola el tipo y la linea del error, en un formato simple
 """
 def Error(tipo, linea):
     print(f"Error en la linea {linea}, {tipo}")
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : Variable a añadir en el archivo output.txt
 ...
 ***
-Tipo de Retorno o None
+Retorna una lista con el estado de la solicitud (True hecha, False con un error)
 ***
-Breve descripcion de la funcion y el retorno
+Verifica si la variable existe y añade su valor a una lista para escribirla al final
 """
 def funcion_mostrar(variable):
     if variable in variables:
         print_mostrar.append(str(variables[variable]))
-        printear = open("output.txt", "w")
-        printear.write(str(variables[variable]))
-        printear.close()
         return [True, None]
     return [False, "variable no existente"]
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : condicion dentro del if booleana
 ...
 ***
-Tipo de Retorno o None
+Retorna una lista con el estado de la solicitud y el detalle (True y el valor de la comparacion
+o False y el error)
 ***
-Breve descripcion de la funcion y el retorno
+Verifica la existencia y el tipo de la variable, si esta todo correcto la retorna, en caso con-
+trario clasifica y retorna el error
 """
 def verificar_if(cond):
     if cond in variables:
@@ -105,13 +102,12 @@ def verificar_if(cond):
     return [False, error]
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : lista con las partes de una linea de definicion
 ...
 ***
-Tipo de Retorno o None
+Retorna una lista con el estado de la solicitud (True hecha, False con un error)
 ***
-Breve descripcion de la funcion y el retorno
+Revisa si la variable no fue declarada y la declara
 """
 def ejec_def(linea_div):
     _, var = linea_div
@@ -121,13 +117,14 @@ def ejec_def(linea_div):
     return [False, "variable ya existente"]
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : lista con las partes de una linea de asignación
 ...
 ***
-Tipo de Retorno o None
+Retorna una lista con el estado de la solicitud (True hecha, False con un error)
 ***
-Breve descripcion de la funcion y el retorno
+Asigna un valor a una variable previamente definida. Si la variable a la que se 
+quiere asignar un valor no existe, o si el valor a asignar no puede ser 
+casteado correctamente, retorna un error.
 """
 def ejec_dp_asig(linea_div):
     _ , var, _, valor = linea_div
@@ -140,13 +137,14 @@ def ejec_dp_asig(linea_div):
     return [False, "variable no existente"]
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : lista con las partes de una linea de operación numérica o comparación
 ...
 ***
-Tipo de Retorno o None
+Retorna una lista con el estado de la solicitud (True hecha, False con un error)
 ***
-Breve descripcion de la funcion y el retorno
+Realiza operaciones numéricas o comparaciones entre variables o valores. 
+Soporta suma, multiplicación, comparación de igualdad y comparación mayor que. 
+En caso de error, retorna un mensaje de error adecuado.
 """
 def ejec_dp_num_str(linea_div):
     _, var,operador, par1, par2 = linea_div
@@ -203,13 +201,14 @@ def ejec_dp_num_str(linea_div):
         return [False, "variable no operable"]
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : condicion dentro del if booleana
 ...
 ***
-Tipo de Retorno o None
+Retorna una lista con el estado de la solicitud (True si la condición se cumple, False con un error)
 ***
-Breve descripcion de la funcion y el retorno
+Maneja la evaluación de una condición booleana en una sentencia if. Controla 
+la cantidad de bloques if anidados permitidos y gestiona los bloques else 
+correspondientes en base al resultado de la condición.
 """
 def ejec_if(cond):
     if len(bloque_if)>4:
@@ -230,13 +229,13 @@ def ejec_if(cond):
     return [estado, detalle]
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : No recibe
 ...
 ***
-Tipo de Retorno o None
+Retorna una lista con el estado de la solicitud (True hecha, None)
 ***
-Breve descripcion de la funcion y el retorno
+Maneja la transición de un bloque if a un bloque else. Controla la finalización 
+del bloque if y la activación del bloque else.
 """
 def ejec_if_else():
     #finaliza un bloque if y empieza else
@@ -251,13 +250,13 @@ def ejec_if_else():
     return [True, None]
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : No recibe
 ...
 ***
-Tipo de Retorno o None
+Retorna una lista con el estado de la solicitud (True hecha, None)
 ***
-Breve descripcion de la funcion y el retorno
+Finaliza un bloque condicional (if o else), limpiando las pilas de control de 
+bloques y continuaciones.
 """
 def ejec_end_else():
     #finaliza bloque condicional
@@ -267,13 +266,13 @@ def ejec_end_else():
     return [True, None]
 """
 ***
-Parametro 1 : Tipo
-Parametro 2 : Tipo
+Parametro 1 : str con la linea de código a analizar
 ...
 ***
-Tipo de Retorno o None
+Retorna una lista con el estado de la solicitud (True si no hay errores, False con un mensaje de error)
 ***
-Breve descripcion de la funcion y el retorno
+Realiza un análisis de sintaxis de una línea de código para detectar posibles errores. 
+Verifica la correcta utilización de palabras clave y estructuras del lenguaje.
 """
 def analisis_sintaxis(linea):
     # Intenta detectar cuál parte de la línea es incorrecta
