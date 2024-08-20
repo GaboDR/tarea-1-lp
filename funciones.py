@@ -6,6 +6,7 @@ variables = {}
 bloque_if = []
 bloque_else = []
 continuacion = []
+print_mostrar = []
 
 # Definir las expresiones regulares
 numeros = r"\d+"  # Captura el número
@@ -33,7 +34,16 @@ cierre_llaves = re.compile(r"^\}$")
 tipos_lineas = [tipo_define, tipo_dp_asig,  tipo_dp_num_str, tipo_mostrar, ]
 
 tipos_cond = [tipo_if, tipo_else, cierre_llaves]
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def determinar_tipo_y_castear(valor):
     if re.fullmatch(numeros, valor):
         return int(valor) 
@@ -43,18 +53,46 @@ def determinar_tipo_y_castear(valor):
     elif re.fullmatch(strings, valor):
 
         return valor.strip("#") 
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def Error(tipo, linea):
     print(f"Error en la linea {linea}, {tipo}")
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def funcion_mostrar(variable):
     if variable in variables:
+        print_mostrar.append(str(variables[variable]))
         printear = open("output.txt", "w")
         printear.write(str(variables[variable]))
         printear.close()
         return [True, None]
     return [False, "variable no existente"]
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def verificar_if(cond):
     if cond in variables:
         resultado = variables[cond]
@@ -65,14 +103,32 @@ def verificar_if(cond):
     else:
         error = "variable no definida"
     return [False, error]
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def ejec_def(linea_div):
     _, var = linea_div
     if var not in variables:
         variables[var] = None
         return [True, None]
     return [False, "variable ya existente"]
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def ejec_dp_asig(linea_div):
     _ , var, _, valor = linea_div
     if valor in variables:
@@ -82,7 +138,16 @@ def ejec_dp_asig(linea_div):
         variables[var] = valor
         return [True, None]
     return [False, "variable no existente"]
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def ejec_dp_num_str(linea_div):
     _, var,operador, par1, par2 = linea_div
     if var not in variables:
@@ -136,8 +201,19 @@ def ejec_dp_num_str(linea_div):
                 variables[var] = False
             return [True, None]
         return [False, "variable no operable"]
-        
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def ejec_if(cond):
+    if len(bloque_if)>4:
+        return [False, "numero de if anidados soportados superado"]
     estado, detalle = verificar_if(cond)
     if estado == True and detalle == True:
         #hacer el if
@@ -152,7 +228,16 @@ def ejec_if(cond):
         bloque_if.append(False)
         return [True, None]
     return [estado, detalle]
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def ejec_if_else():
     #finaliza un bloque if y empieza else
     if bloque_if[-1]:
@@ -164,14 +249,32 @@ def ejec_if_else():
         continuacion.pop()
         continuacion.append(False)
     return [True, None]
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def ejec_end_else():
     #finaliza bloque condicional
     bloque_if.pop()
     bloque_else.pop()
     continuacion.pop()
     return [True, None]
-
+"""
+***
+Parametro 1 : Tipo
+Parametro 2 : Tipo
+...
+***
+Tipo de Retorno o None
+***
+Breve descripcion de la funcion y el retorno
+"""
 def analisis_sintaxis(linea):
     # Intenta detectar cuál parte de la línea es incorrecta
     partes = linea.split()
