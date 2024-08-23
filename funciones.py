@@ -2,21 +2,19 @@ import re
 
 variables = {}
 
-#para restringir iterados hay que implementar una pila
 bloque_if = []
 bloque_else = []
 continuacion = []
 print_mostrar = []
 
-# Definir las expresiones regulares
-numeros = r"\d+"  # Captura el número
-bools = r"True|False"  # Captura True o False
-strings = r"#.+#"  # Captura el string entre #
-tipo_var = r"\$_[A-Z][a-zA-Z]*"  # Captura el tipo de variable
+
+numeros = r"\d+"  
+bools = r"True|False" 
+strings = r"#.+#"  
+tipo_var = r"\$_[A-Z][a-zA-Z]*" 
 
 datos = [numeros, bools, strings, tipo_var]
 
-# Opciones con captura agrupada
 opciones = f"({numeros}|{strings}|{bools})"
 opciones_asig = f"({numeros}|{strings}|{bools}|{tipo_var})"
 opciones_num_str = f"({numeros}|{strings}|{tipo_var})"
@@ -25,15 +23,14 @@ opciones_num_str = f"({numeros}|{strings}|{tipo_var})"
 tipo_define = re.compile(r"(DEFINE)\s+" + f"({tipo_var})")
 tipo_dp_asig = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(ASIG)\s+" + opciones_asig)
 tipo_dp_num_str = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==|\*|>)\s+" + opciones_num_str + r"\s+" + opciones_num_str)
-tipo_mostrar = re.compile(rf"^MOSTRAR\("+ f"({tipo_var})\)")
+tipo_mostrar = re.compile(rf"^MOSTRAR\(\s*"+ f"({tipo_var})\s*\)")
 tipo_if = re.compile(r"if\s*\(" + f"({tipo_var})" + r"\)\s*\{")
 tipo_else = re.compile(r"\}\s+else\s+\{")
 cierre_llaves = re.compile(r"^\}$")
 
-# Agrupar todas las expresiones regulares
 tipos_lineas = [tipo_define, tipo_dp_asig,  tipo_dp_num_str, tipo_mostrar, ]
-
 tipos_cond = [tipo_if, tipo_else, cierre_llaves]
+
 """
 ***
 Parametro 1 : valor de variable extraida del .txt
@@ -76,8 +73,10 @@ Verifica si la variable existe y añade su valor a una lista para escribirla al 
 """
 def funcion_mostrar(variable):
     if variable in variables:
-        print_mostrar.append(str(variables[variable]))
-        return [True, None]
+        if variables[variable] != None:
+            print_mostrar.append(str(variables[variable]))
+            return [True, None]
+        return [False, "variable no definida"]
     return [False, "variable no existente"]
 """
 ***
