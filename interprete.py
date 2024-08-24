@@ -12,17 +12,27 @@ with open("codigo.txt", "r") as archivo:
             j += 1
             match = condcional.fullmatch(linea)
             if match:
+                revision1 = True  
                 coincidencias = match.groups()
                
                 if j == 0:
+                    if len(continuacion)>0:
+                        if continuacion[-1] == True and bloque_if[-1] == False:
+                            ignorar_if +=2
+                            break
                     estado, detalle = ejec_if(coincidencias[0])
                     
                 elif j == 1:
+                    if ignorar_if > 0:
+                        ignorar_if -= 1
+                        break
                     estado, detalle = ejec_if_else()
                 
                 elif j == 2:
+                    if ignorar_if > 0:
+                        ignorar_if -= 1
+                        break
                     estado, detalle = ejec_end_else()
-                revision1 = True  
 
         if len(continuacion)>0:
             if continuacion[-1]:
@@ -34,6 +44,7 @@ with open("codigo.txt", "r") as archivo:
             i += 1
             match2 = tipo.fullmatch(linea)
             if match2:
+                revision2 = True
                 coincidencias = match2.groups()                
                 if i == 0:
                     estado, detalle = ejec_def(coincidencias)
@@ -45,7 +56,6 @@ with open("codigo.txt", "r") as archivo:
                     estado, detalle = ejec_dp_num_str(coincidencias)
                 elif i == 3:
                     estado, detalle = funcion_mostrar(coincidencias[0])
-                revision2 = True
 
                 break
         if revision1 ==False and revision2 == False:
@@ -57,6 +67,6 @@ with open("codigo.txt", "r") as archivo:
 if len(print_mostrar)>0:
     printear = open("output.txt", "w")
     for resultado in print_mostrar:
-        printear.write(resultado)
+        printear.write(resultado+"\n")
     printear.close()
 archivo.close()

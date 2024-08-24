@@ -6,6 +6,7 @@ bloque_if = []
 bloque_else = []
 continuacion = []
 print_mostrar = []
+ignorar_if = 0
 
 
 numeros = r"\d+"  
@@ -24,7 +25,7 @@ tipo_define = re.compile(r"(DEFINE)\s+" + f"({tipo_var})")
 tipo_dp_asig = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(ASIG)\s+" + opciones_asig)
 tipo_dp_num_str = re.compile(r"(DP)\s+" + f"({tipo_var})" + r"\s+(\+|==|\*|>)\s+" + opciones_num_str + r"\s+" + opciones_num_str)
 tipo_mostrar = re.compile(rf"^MOSTRAR\(\s*"+ f"({tipo_var})\s*\)")
-tipo_if = re.compile(r"if\s*\(" + f"({tipo_var})" + r"\)\s*\{")
+tipo_if = re.compile(r"if\s+\(" + f"({tipo_var})" + r"\)\s*\{")
 tipo_else = re.compile(r"\}\s+else\s+\{")
 cierre_llaves = re.compile(r"^\}$")
 
